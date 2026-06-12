@@ -1,0 +1,61 @@
+name: rilgrn
+description: "NeoICR — Automated GRN processing Flutter plugin. Supports Android, iOS, Web, Windows, macOS, Linux."
+version: 0.0.1
+homepage:
+
+environment:
+  sdk: ^3.10.7
+  flutter: '>=3.3.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_web_plugins:
+    sdk: flutter
+  web: ^1.0.0
+  plugin_platform_interface: ^2.0.2
+
+  # State management
+  provider: ^6.1.2
+
+  # HTTP + streaming
+  dio: ^5.4.3
+  http: ^1.2.1
+
+  # Local storage
+  shared_preferences: ^2.2.2
+
+  # Image picking (cross-platform replacement for ML Kit doc scanner)
+  image_picker: ^1.0.7
+
+  # Image display
+  cached_network_image: ^3.3.1
+
+  # UUID for PID generation
+  uuid: ^4.3.3
+
+  # JSON
+  # built-in dart:convert is sufficient
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+
+flutter:
+  plugin:
+    platforms:
+      android:
+        package: com.example.rilgrn
+        pluginClass: RilgrnPlugin
+      ios:
+        pluginClass: RilgrnPlugin
+      linux:
+        pluginClass: RilgrnPlugin
+      macos:
+        pluginClass: RilgrnPlugin
+      windows:
+        pluginClass: RilgrnPluginCApi
+      web:
+        pluginClass: RilgrnWeb
+        fileName: rilgrn_web.dart
