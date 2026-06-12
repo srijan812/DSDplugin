@@ -90,8 +90,8 @@ class _NeoICRAppState extends State<NeoICRApp> {
                 ),
               ),
               ListTile(
-                leading: const Icon(Icons.camera_alt, color: AppColors.primaryBlue),
-                title: const Text('Take Photo (Camera)'),
+                leading: const Icon(Icons.document_scanner, color: AppColors.primaryBlue),
+                title: const Text('Scan Document (Smart Camera)'),
                 onTap: () => Navigator.of(ctx).pop(ImageSource.camera),
               ),
               ListTile(
@@ -109,21 +109,29 @@ class _NeoICRAppState extends State<NeoICRApp> {
     if (source == null) return;
 
     final pid = await vm.generateNewPid();
-    final List<XFile> images = [];
+    final List<String> paths = [];
 
     if (source == ImageSource.camera) {
-      final XFile? singleImage = await _picker.pickImage(source: ImageSource.camera, imageQuality: 90);
-      if (singleImage != null) {
-        images.add(singleImage);
+      try {
+        final scannedPaths = await RilgrnPlatform.instance.scanDocument();
+        if (scannedPaths != null && scannedPaths.isNotEmpty) {
+          paths.addAll(scannedPaths);
+        }
+      } catch (e) {
+        debugPrint('Error scanning document: $e');
+        // Optional fallback if something errors natively
+        final XFile? singleImage = await _picker.pickImage(source: ImageSource.camera, imageQuality: 90);
+        if (singleImage != null) {
+          paths.add(singleImage.path);
+        }
       }
     } else {
       final List<XFile> multipleImages = await _picker.pickMultiImage(imageQuality: 90);
-      images.addAll(multipleImages);
+      paths.addAll(multipleImages.map((x) => x.path));
     }
 
-    if (images.isEmpty) return;
+    if (paths.isEmpty) return;
 
-    final paths = images.map((x) => x.path).toList();
     vm.updateScannedImages(paths);
     vm.onScannerResultReceived();
     vm.uploadImagesAndProcess(pid: pid, imageUris: paths);
