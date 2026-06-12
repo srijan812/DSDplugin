@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
+import 'package:image_picker/image_picker.dart';
 
 import 'rilgrn_platform_interface.dart';
 
@@ -13,5 +14,21 @@ class MethodChannelRilgrn extends RilgrnPlatform {
   Future<String?> getPlatformVersion() async {
     final version = await methodChannel.invokeMethod<String>('getPlatformVersion');
     return version;
+  }
+
+  @override
+  Future<List<String>?> scanDocument() async {
+    try {
+      final result = await methodChannel.invokeListMethod<String>('scanDocument');
+      return result;
+    } on MissingPluginException {
+      // Fallback for desktop platforms missing a native scanner implementation
+      final picker = ImagePicker();
+      final pickedFile = await picker.pickImage(source: ImageSource.camera);
+      if (pickedFile != null) {
+        return [pickedFile.path];
+      }
+      return null;
+    }
   }
 }

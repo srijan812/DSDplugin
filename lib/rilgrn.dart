@@ -38,3 +38,18 @@ export 'src/models/grn_item.dart';
 
 // Theme
 export 'src/theme/app_theme.dart';
+
+import 'rilgrn_platform_interface.dart';
+
+class Rilgrn {
+  /// Returns the current platform version.
+  static Future<String?> getPlatformVersion() {
+    return RilgrnPlatform.instance.getPlatformVersion();
+  }
+
+  /// Scans a document using the platform's native document scanner.
+  /// Returns a list of file paths to the cropped document images.
+  static Future<List<String>?> scanDocument() {
+    return RilgrnPlatform.instance.scanDocument();
+  }
+}

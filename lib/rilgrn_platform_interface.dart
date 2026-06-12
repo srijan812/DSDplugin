@@ -26,4 +26,10 @@ abstract class RilgrnPlatform extends PlatformInterface {
   Future<String?> getPlatformVersion() {
     throw UnimplementedError('platformVersion() has not been implemented.');
   }
+
+  /// Scans a document using the platform's native document scanner.
+  /// Returns a list of file paths (or equivalent URIs) to the cropped document images.
+  Future<List<String>?> scanDocument() {
+    throw UnimplementedError('scanDocument() has not been implemented.');
+  }
 }

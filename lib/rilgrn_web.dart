@@ -4,6 +4,7 @@
 // ignore: avoid_web_libraries_in_flutter
 
 import 'package:flutter_web_plugins/flutter_web_plugins.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:web/web.dart' as web;
 
 import 'rilgrn_platform_interface.dart';
@@ -22,5 +23,16 @@ class RilgrnWeb extends RilgrnPlatform {
   Future<String?> getPlatformVersion() async {
     final version = web.window.navigator.userAgent;
     return version;
+  }
+
+  @override
+  Future<List<String>?> scanDocument() async {
+    // Fallback for Web platform since it lacks native Document Scanner
+    final picker = ImagePicker();
+    final pickedFile = await picker.pickImage(source: ImageSource.camera);
+    if (pickedFile != null) {
+      return [pickedFile.path];
+    }
+    return null;
   }
 }
