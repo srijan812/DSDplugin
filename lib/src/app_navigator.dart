@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:image_picker/image_picker.dart';
+import 'package:qcrplugin/qcrplugin.dart';
 import 'viewmodels/dashboard_view_model.dart';
 import 'ui/dashboard_screen.dart';
 import 'ui/trip_detail_screen.dart';
@@ -22,7 +22,6 @@ class NeoICRApp extends StatefulWidget {
 
 class _NeoICRAppState extends State<NeoICRApp> {
   String _currentScreen = 'dashboard';
-  final ImagePicker _picker = ImagePicker();
 
   @override
   Widget build(BuildContext context) {
@@ -52,7 +51,7 @@ class _NeoICRAppState extends State<NeoICRApp> {
         return TripDetailScreen(
           tripId: vm.activeTripId ?? 'TRIP-UNKNOWN',
           onBack: () => setState(() => _currentScreen = 'dashboard'),
-          onCapture: () => _launchImagePicker(context, vm),
+          onCapture: () => _launchQcrCapture(context, vm),
           onGrnClick: () => setState(() => _currentScreen = 'grn'),
         );
       }
@@ -71,69 +70,15 @@ class _NeoICRAppState extends State<NeoICRApp> {
   }
 
   /// Cross-platform image pick — replaces ML Kit Document Scanner.
-  Future<void> _launchImagePicker(BuildContext context, DashboardViewModel vm) async {
-    final ImageSource? source = await showModalBottomSheet<ImageSource>(
-      context: context,
-      backgroundColor: Colors.white,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-      ),
-      builder: (BuildContext ctx) {
-        return SafeArea(
-          child: Wrap(
-            children: [
-              const Padding(
-                padding: EdgeInsets.fromLTRB(16, 20, 16, 8),
-                child: Text(
-                  'Select Image Source',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                ),
-              ),
-              ListTile(
-                leading: const Icon(Icons.document_scanner, color: AppColors.primaryBlue),
-                title: const Text('Scan Document (Smart Camera)'),
-                onTap: () => Navigator.of(ctx).pop(ImageSource.camera),
-              ),
-              ListTile(
-                leading: const Icon(Icons.photo_library, color: AppColors.primaryBlue),
-                title: const Text('Choose from Gallery'),
-                onTap: () => Navigator.of(ctx).pop(ImageSource.gallery),
-              ),
-              const SizedBox(height: 16),
-            ],
-          ),
-        );
-      },
-    );
-
-    if (source == null) return;
-
+  Future<void> _launchQcrCapture(
+      BuildContext context, DashboardViewModel vm) async {
     final pid = await vm.generateNewPid();
-    final List<String> paths = [];
+    // Launch QCR SDK with default user and pid
+    await Qcrplugin.startQcrCapture(context,
+        userId: "default", pid: pid, captureType: "qcr");
 
-    if (source == ImageSource.camera) {
-      try {
-        final scannedPaths = await RilgrnPlatform.instance.scanDocument();
-        if (scannedPaths != null && scannedPaths.isNotEmpty) {
-          paths.addAll(scannedPaths);
-        }
-      } catch (e) {
-        debugPrint('Error scanning document: $e');
-        // Optional fallback if something errors natively
-        final XFile? singleImage = await _picker.pickImage(source: ImageSource.camera, imageQuality: 90);
-        if (singleImage != null) {
-          paths.add(singleImage.path);
-        }
-      }
-    } else {
-      final List<XFile> multipleImages = await _picker.pickMultiImage(imageQuality: 90);
-      paths.addAll(multipleImages.map((x) => x.path));
-    }
-
-    if (paths.isEmpty) return;
-
-    vm.updateScannedImages(paths);
-    vm.onScannerResultReceived();
-    vm.uploadImagesAndProcess(pid: pid, imageUris: paths);
+    // Check verification status from backend by resuming/refreshing logic if needed.
+    // DSDplugin dashboard view model depends on stream/updates.
+    // QCRplugin handles uploading so we mark loading.
   }
 }
